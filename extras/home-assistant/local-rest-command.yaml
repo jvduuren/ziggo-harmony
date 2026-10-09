@@ -1,0 +1,14 @@
+# Control the Next Mini from Home Assistant through the bridge's local HTTP API (no cloud).
+#
+# Add to configuration.yaml (or a package). If "ziggo-remote.local" does not resolve from your
+# Home Assistant install (e.g. some Docker setups), use the bridge's IP address instead.
+#
+# Example action:
+#   action: rest_command.ziggo_key
+#   data:
+#     key: ok        # any key id from the bridge web UI: ok, up, ch_up, 1, power, ...
+
+rest_command:
+  ziggo_key:
+    url: "http://ziggo-remote.local/api/send?key={{ key }}"
+    method: post

@@ -1,23 +1,26 @@
-# Ziggo Mediabox Next Mini bedienen met een Logitech Harmony Hub
+# Alternative without extra hardware: Harmony Hub -> Home Assistant -> Ziggo cloud -> Next Mini
 #
-# Keten: Harmony Hub --(Roku ECP over wifi)--> HA "Emulated Roku"
-#        --> event roku_command --> deze automations
+# Chain: Harmony Hub --(Roku ECP over Wi-Fi)--> HA "Emulated Roku"
+#        --> roku_command event --> these automations
 #        --> lghorizon.remote_key_press --(Ziggo cloud/MQTT)--> Next Mini
 #
-# Vereist in Home Assistant:
-#   - LG Horizon (HACS, Sholofly/lghorizon), provider Ziggo
-#   - Emulated Roku met drie servers, namen exact zoals in KEYMAP hieronder:
-#       "Ziggo Nav" poort 8060, "Ziggo Extra" poort 8061, "Ziggo Cijfers" poort 8062
-#   - Logitech Harmony-integratie (voor aan/uit via de activiteit)
+# Slower than the ESP32 bridge (every key press goes through the cloud) and limited to the
+# keys a Roku has, hence three emulated Rokus. Not tested end to end.
 #
-# Gebruik als package: in configuration.yaml
+# Requires in Home Assistant:
+#   - LG Horizon (HACS, Sholofly/lghorizon), provider Ziggo
+#   - Emulated Roku with three servers, names exactly as in the keymap below:
+#       "Ziggo Nav" port 8060, "Ziggo Extra" port 8061, "Ziggo Cijfers" port 8062
+#   - Logitech Harmony integration (power on/off follows the Harmony activity)
+#
+# Use as a package: in configuration.yaml
 #   homeassistant:
 #     packages: !include_dir_named packages
-# en zet dit bestand in /config/packages/.
+# and put this file in /config/packages/.
 
 automation:
   - id: ziggo_harmony_roku_bridge
-    alias: "Ziggo Next Mini – Harmony-knoppen (emulated Roku)"
+    alias: "Ziggo Next Mini – Harmony buttons (emulated Roku)"
     mode: queued
     max: 25
     max_exceeded: silent
@@ -27,9 +30,9 @@ automation:
         event_data:
           type: keypress
     variables:
-      ziggo: media_player.ziggo_next_mini # pas aan naar je eigen entity
+      ziggo: media_player.ziggo_next_mini # adjust to your own entity
       keymap:
-        # Roku-commando (zoals Harmony het stuurt) -> Ziggo-toets
+        # Roku command (as sent by Harmony) -> Ziggo key
         "Ziggo Nav":
           Up: ArrowUp
           Down: ArrowDown
@@ -82,15 +85,15 @@ automation:
           remote_key: "{{ ziggo_key }}"
 
   - id: ziggo_harmony_power
-    alias: "Ziggo Next Mini – aan/uit met Harmony-activiteit"
+    alias: "Ziggo Next Mini – power follows Harmony activity"
     mode: restart
     triggers:
       - trigger: state
-        entity_id: remote.harmony_hub # pas aan naar je eigen entity
+        entity_id: remote.harmony_hub # adjust to your own entity
         attribute: current_activity
     variables:
       ziggo: media_player.ziggo_next_mini
-      tv_activity: "TV kijken" # naam van je Harmony-activiteit
+      tv_activity: "TV kijken" # name of your Harmony activity
       activity: "{{ trigger.to_state.attributes.current_activity }}"
     actions:
       - choose:
