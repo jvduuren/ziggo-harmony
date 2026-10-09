@@ -1,0 +1,106 @@
+# Ziggo Mediabox Next Mini bedienen met een Logitech Harmony Hub
+#
+# Keten: Harmony Hub --(Roku ECP over wifi)--> HA "Emulated Roku"
+#        --> event roku_command --> deze automations
+#        --> lghorizon.remote_key_press --(Ziggo cloud/MQTT)--> Next Mini
+#
+# Vereist in Home Assistant:
+#   - LG Horizon (HACS, Sholofly/lghorizon), provider Ziggo
+#   - Emulated Roku met drie servers, namen exact zoals in KEYMAP hieronder:
+#       "Ziggo Nav" poort 8060, "Ziggo Extra" poort 8061, "Ziggo Cijfers" poort 8062
+#   - Logitech Harmony-integratie (voor aan/uit via de activiteit)
+#
+# Gebruik als package: in configuration.yaml
+#   homeassistant:
+#     packages: !include_dir_named packages
+# en zet dit bestand in /config/packages/.
+
+automation:
+  - id: ziggo_harmony_roku_bridge
+    alias: "Ziggo Next Mini – Harmony-knoppen (emulated Roku)"
+    mode: queued
+    max: 25
+    max_exceeded: silent
+    triggers:
+      - trigger: event
+        event_type: roku_command
+        event_data:
+          type: keypress
+    variables:
+      ziggo: media_player.ziggo_next_mini # pas aan naar je eigen entity
+      keymap:
+        # Roku-commando (zoals Harmony het stuurt) -> Ziggo-toets
+        "Ziggo Nav":
+          Up: ArrowUp
+          Down: ArrowDown
+          Left: ArrowLeft
+          Right: ArrowRight
+          Select: Enter
+          Back: Escape
+          Home: MediaTopMenu
+          Info: Info
+          Play: MediaPlayPause
+          Rev: MediaRewind
+          Fwd: MediaFastForward
+          InstantReplay: TV
+          Search: Guide
+        "Ziggo Extra":
+          Up: ChannelUp
+          Down: ChannelDown
+          Select: MediaRecord
+          Back: MediaStop
+          Home: ContextMenu
+          Info: Subtitle
+          Search: Teletext
+          InstantReplay: AudioTrack
+          Left: Red
+          Right: Green
+          Rev: Yellow
+          Fwd: Blue
+        "Ziggo Cijfers":
+          Up: "1"
+          Down: "2"
+          Left: "3"
+          Right: "4"
+          Select: "5"
+          Back: "6"
+          Home: "7"
+          Info: "8"
+          Play: "9"
+          Rev: "0"
+      ziggo_key: >-
+        {{ keymap.get(trigger.event.data.source_name, {})
+                 .get(trigger.event.data.key, '') }}
+    conditions:
+      - condition: template
+        value_template: "{{ ziggo_key | string | length > 0 }}"
+    actions:
+      - action: lghorizon.remote_key_press
+        target:
+          entity_id: "{{ ziggo }}"
+        data:
+          remote_key: "{{ ziggo_key }}"
+
+  - id: ziggo_harmony_power
+    alias: "Ziggo Next Mini – aan/uit met Harmony-activiteit"
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id: remote.harmony_hub # pas aan naar je eigen entity
+        attribute: current_activity
+    variables:
+      ziggo: media_player.ziggo_next_mini
+      tv_activity: "TV kijken" # naam van je Harmony-activiteit
+      activity: "{{ trigger.to_state.attributes.current_activity }}"
+    actions:
+      - choose:
+          - conditions: "{{ activity == tv_activity }}"
+            sequence:
+              - action: media_player.turn_on
+                target:
+                  entity_id: "{{ ziggo }}"
+          - conditions: "{{ trigger.from_state.attributes.current_activity == tv_activity }}"
+            sequence:
+              - action: media_player.turn_off
+                target:
+                  entity_id: "{{ ziggo }}"
