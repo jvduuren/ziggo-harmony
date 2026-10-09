@@ -61,6 +61,7 @@ Press the button for <b id="learnKey"></b> on your remote now&hellip;</div>
 <form id="fw" style="margin-top:12px" class="row"><input type="file" name="firmware" accept=".bin">
 <button class="primary">Update firmware</button><span id="fwstate" class="muted"></span></form>
 <details style="margin-top:12px"><summary class="muted">Messages from the box</summary><pre id="box"></pre></details>
+<details id="logbox" style="margin-top:8px"><summary class="muted">Log</summary><pre id="log"></pre></details>
 </div>
 </main>
 <script>
@@ -89,6 +90,7 @@ async function status(){
     if(s.learning)$('learnKey').textContent=s.learning;
     if(learning&&!s.learning)load();
     learning=s.learning;
+    if($('logbox').open)$('log').textContent=await (await fetch('/api/log')).text();
   }catch(e){$('ble').textContent='offline';}
 }
 async function loadMap(){$('map').value=await (await fetch('/api/map')).text();}

@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "led.h"
+#include "log.h"
 
 namespace {
 
@@ -65,7 +66,7 @@ String toHex(const uint8_t* data, size_t len) {
 
 void logBoxMessage(const char* what, const NimBLEAttValue& value) {
   String line = String(what) + ": " + toHex(value.data(), value.size());
-  Serial.printf("[ble] box -> remote %s\n", line.c_str());
+  logf("[ble] box -> remote %s\n", line.c_str());
   std::lock_guard<std::mutex> lock(stateMutex);
   boxLog[boxLogNext] = line;
   boxLogNext = (boxLogNext + 1) % kMaxBoxMessages;
@@ -89,19 +90,19 @@ class ServerCallbacks : public NimBLEServerCallbacks {
       std::lock_guard<std::mutex> lock(stateMutex);
       peer = address.c_str();
     }
-    Serial.printf("[ble] connected: %s\n", address.c_str());
+    logf("[ble] connected: %s\n", address.c_str());
   }
 
   void onDisconnect(NimBLEServer*, NimBLEConnInfo&, int reason) override {
     isConnected = false;
     isEncrypted = false;
     subscribedMask = 0;
-    Serial.printf("[ble] disconnected, reason 0x%02X\n", reason);
+    logf("[ble] disconnected, reason 0x%02X\n", reason);
   }
 
   void onAuthenticationComplete(NimBLEConnInfo& info) override {
     isEncrypted = info.isEncrypted();
-    Serial.printf("[ble] security: encrypted=%d bonded=%d\n", info.isEncrypted(), info.isBonded());
+    logf("[ble] security: encrypted=%d bonded=%d\n", info.isEncrypted(), info.isBonded());
   }
 };
 
@@ -114,7 +115,7 @@ class ReportCallbacks : public NimBLECharacteristicCallbacks {
     } else {
       subscribedMask &= ~(1 << report);
     }
-    Serial.printf("[ble] report %u %s\n", report, subValue ? "subscribed" : "unsubscribed");
+    logf("[ble] report %u %s\n", report, subValue ? "subscribed" : "unsubscribed");
   }
 };
 
@@ -133,7 +134,7 @@ class AlertCallbacks : public NimBLECharacteristicCallbacks {
   void onWrite(NimBLECharacteristic* chr, NimBLEConnInfo&) override {
     NimBLEAttValue v = chr->getValue();
     uint8_t level = v.size() ? v.data()[0] : 0;
-    Serial.printf("[ble] find-my-remote alert, level %u\n", level);
+    logf("[ble] find-my-remote alert, level %u\n", level);
     led::findMe(level ? 5000 : 0);
   }
 };
@@ -221,7 +222,7 @@ void begin() {
   advertising->setAdvertisementData(adv);
   advertising->start();
 
-  Serial.printf("[ble] advertising as %s (%s), %d bond(s)\n", kBleName, ownAddress().c_str(),
+  logf("[ble] advertising as %s (%s), %d bond(s)\n", kBleName, ownAddress().c_str(),
                 bondCount());
 }
 
@@ -246,7 +247,7 @@ void release(uint8_t report) {
 }
 
 void unpair() {
-  Serial.println("[ble] deleting all bonds");
+  logf("[ble] deleting all bonds\n");
   if (isConnected) server->disconnect(connHandle);
   NimBLEDevice::deleteAllBonds();
 }

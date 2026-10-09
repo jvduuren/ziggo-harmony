@@ -4,6 +4,7 @@
 #include "config.h"
 #include "keys.h"
 #include "led.h"
+#include "log.h"
 
 namespace {
 
@@ -23,13 +24,13 @@ void pressKey(int index) {
   ble::press(kKeys[index].report, kKeys[index].usage);
   heldKey = index;
   heldSince = millis();
-  Serial.printf("[key] %s down%s\n", kKeys[index].id, ble::ready() ? "" : " (box not connected)");
+  logf("[key] %s down%s\n", kKeys[index].id, ble::ready() ? "" : " (box not connected)");
 }
 
 void releaseKey() {
   if (heldKey < 0) return;
   ble::release(kKeys[heldKey].report);
-  Serial.printf("[key] %s up (%lu ms)\n", kKeys[heldKey].id, millis() - heldSince);
+  logf("[key] %s up (%lu ms)\n", kKeys[heldKey].id, millis() - heldSince);
   heldKey = -1;
 }
 
@@ -52,7 +53,7 @@ void handleIr(const IrEvent& event) {
 
   if (learning >= 0) {
     keymap::assign(learning, event.code);
-    Serial.printf("[learn] %s = %s\n", kKeys[learning].id, ir::describe(event.code).c_str());
+    logf("[learn] %s = %s\n", kKeys[learning].id, ir::describe(event.code).c_str());
     led::flash(0, 30, 0, 400);
     learning = -1;
     lastKey = keymap::lookup(event.code);
@@ -63,7 +64,7 @@ void handleIr(const IrEvent& event) {
   int key = keymap::lookup(event.code);
   lastKey = key;
   if (key < 0) {
-    Serial.printf("[ir] unknown %s\n", ir::describe(event.code).c_str());
+    logf("[ir] unknown %s\n", ir::describe(event.code).c_str());
     led::flash(30, 0, 0, 80);
     return;
   }
@@ -82,7 +83,7 @@ void tick() {
   uint32_t now = millis();
   if (heldKey >= 0 && now - lastFrameAt > kReleaseTimeoutMs) releaseKey();
   if (learning >= 0 && now - learningSince > kLearnTimeoutMs) {
-    Serial.println("[learn] timed out");
+    logf("[learn] timed out\n");
     learning = -1;
   }
 }
@@ -96,7 +97,7 @@ void tap(int keyIndex) {
 
 void tapRaw(uint8_t report, uint16_t usage) {
   releaseKey();
-  Serial.printf("[key] raw report %u usage 0x%04X\n", report, usage);
+  logf("[key] raw report %u usage 0x%04X\n", report, usage);
   ble::press(report, usage);
   delay(kTapDurationMs);
   ble::release(report);
@@ -107,7 +108,7 @@ bool startLearning(int keyIndex) {
   releaseKey();
   learning = keyIndex;
   learningSince = millis();
-  Serial.printf("[learn] press the button for '%s' on your remote\n", kKeys[keyIndex].label);
+  logf("[learn] press the button for '%s' on your remote\n", kKeys[keyIndex].label);
   return true;
 }
 

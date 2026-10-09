@@ -4,6 +4,7 @@
 #include <IRutils.h>
 
 #include "config.h"
+#include "log.h"
 
 namespace {
 
@@ -35,7 +36,7 @@ namespace ir {
 void begin() {
   receiver.setUnknownThreshold(12);
   receiver.enableIRIn();
-  Serial.printf("[ir] receiver on GPIO%d\n", IR_PIN);
+  logf("[ir] receiver on GPIO%d\n", IR_PIN);
 }
 
 bool poll(IrEvent& event) {

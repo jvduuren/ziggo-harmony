@@ -54,6 +54,26 @@ stabieler.
 
 ## Flashen
 
+Elke build levert per bordje twee bestanden op:
+
+- `factory.bin`: de complete image, die je één keer via USB op adres `0x0` flasht.
+- `firmware.bin`: alleen de applicatie, voor updates via wifi.
+
+### De eerste keer, vanuit de browser (zonder installatie)
+
+1. Haal `factory.bin` voor je bordje op via het tabblad **Actions** (de laatste geslaagde run van
+   "Build firmware"), of bouw hem zelf (zie hieronder).
+2. Houd **BOOT** op het bordje ingedrukt terwijl je het in de USB-poort van je computer steekt en
+   laat de knop daarna los.
+3. Open [esptool-js](https://espressif.github.io/esptool-js/) in **Chrome of Edge** (Safari en
+   Firefox ondersteunen geen Web Serial). Klik op **Connect** en kies de seriële poort van het
+   bordje.
+4. Zet het flash-adres op `0x0`, kies `factory.bin` en klik op **Program**.
+5. Haal het bordje los en steek het weer in. Het ledje toont rood, groen en blauw en knippert
+   daarna oranje.
+
+### Met PlatformIO
+
 1. Installeer [VS Code](https://code.visualstudio.com/) met de extensie **PlatformIO IDE**.
 2. Clone deze repository en open de map in VS Code.
 3. Kies de omgeving voor je bordje in de PlatformIO-werkbalk: `waveshare-esp32-s3-zero` of
@@ -62,7 +82,16 @@ stabieler.
    daarna los.
 5. Kies **Upload**, en daarna **Monitor** om het log te zien (115200 baud).
 
-Na de eerste keer kun je updates via de webinterface installeren.
+### Updates via wifi
+
+Upload `firmware.bin` (niet `factory.bin`) in de webinterface onder Maintenance, of vanaf de
+opdrachtregel:
+
+```
+curl -F "firmware=@firmware.bin" http://ziggo-remote.local/update
+```
+
+Het log kun je ook zonder USB bekijken: in de webinterface onder Maintenance, of via `/api/log`.
 
 ## Instellen
 
@@ -137,6 +166,8 @@ Lijkt oranje bij jou groen, zet dan `LED_SWAP_RG` in `platformio.ini` om.
 | `POST /api/send?key=ok` | Een toets indrukken (namen zoals in de webinterface en bij `keys`) |
 | `POST /api/send?report=3&usage=0x40` | Een willekeurige HID-code sturen (om te ontdekken welke toetsen de box nog meer kent) |
 | `GET /api/status` | Status als JSON |
+| `GET /api/log` | Recente logregels |
+| `POST /update` (multipart, veld `firmware`) | Firmware-update met `firmware.bin` |
 | `GET /api/map`, `POST /api/map` | IR-koppelingen exporteren of importeren |
 
 Voor Home Assistant, zie [extras/home-assistant/local-rest-command.yaml](extras/home-assistant/local-rest-command.yaml).

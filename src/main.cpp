@@ -10,6 +10,7 @@
 #include "ir_input.h"
 #include "keys.h"
 #include "led.h"
+#include "log.h"
 #include "net.h"
 
 namespace {
@@ -111,7 +112,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setTxTimeoutMs(0);  // never let logging stall the bridge when no terminal is reading
   delay(500);
-  Serial.printf("\nziggo-harmony %s\n", FW_VERSION);
+  logf("ziggo-harmony %s\n", FW_VERSION);
   pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP);
 
   led::begin();

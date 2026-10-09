@@ -10,6 +10,7 @@
 #include "bridge.h"
 #include "config.h"
 #include "keys.h"
+#include "log.h"
 #include "web_page.h"
 
 namespace {
@@ -103,13 +104,13 @@ void handleUpdateDone() {
 void handleUpdateUpload() {
   HTTPUpload& upload = web.upload();
   if (upload.status == UPLOAD_FILE_START) {
-    Serial.printf("[ota] receiving %s\n", upload.filename.c_str());
+    logf("[ota] receiving %s\n", upload.filename.c_str());
     Update.begin(UPDATE_SIZE_UNKNOWN);
   } else if (upload.status == UPLOAD_FILE_WRITE) {
     Update.write(upload.buf, upload.currentSize);
   } else if (upload.status == UPLOAD_FILE_END) {
     Update.end(true);
-    Serial.printf("[ota] %u bytes, %s\n", upload.totalSize, Update.hasError() ? "error" : "ok");
+    logf("[ota] %u bytes, %s\n", upload.totalSize, Update.hasError() ? "error" : "ok");
   }
 }
 
@@ -117,6 +118,7 @@ void startWeb() {
   web.on("/", HTTP_GET, [] { web.send_P(200, "text/html", kIndexHtml); });
   web.on("/api/status", HTTP_GET, handleStatus);
   web.on("/api/keys", HTTP_GET, handleKeys);
+  web.on("/api/log", HTTP_GET, [] { web.send(200, "text/plain", logText()); });
   web.on("/api/send", HTTP_POST, handleSend);
   web.on("/api/learn", HTTP_POST, handleLearn);
   web.on("/api/learn/cancel", HTTP_POST, [] {
@@ -146,7 +148,7 @@ void startWeb() {
   MDNS.begin(kHostname);
   MDNS.addService("http", "tcp", 80);
   webStarted = true;
-  Serial.printf("[web] http://%s/ or http://%s.local/\n", WiFi.localIP().toString().c_str(), kHostname);
+  logf("[web] http://%s/ or http://%s.local/\n", WiFi.localIP().toString().c_str(), kHostname);
 }
 
 }  // namespace
@@ -162,9 +164,9 @@ void begin() {
   // again after a few minutes and keep retrying the saved network.
   if (wifiManager.getWiFiIsSaved()) wifiManager.setConfigPortalTimeout(180);
   if (wifiManager.autoConnect(kSetupApName)) {
-    Serial.printf("[wifi] connected to %s\n", WiFi.SSID().c_str());
+    logf("[wifi] connected to %s\n", WiFi.SSID().c_str());
   } else {
-    Serial.printf("[wifi] setup portal: connect to Wi-Fi network '%s'\n", kSetupApName);
+    logf("[wifi] setup portal: connect to Wi-Fi network '%s'\n", kSetupApName);
   }
 }
 

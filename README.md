@@ -53,6 +53,23 @@ the receiver, makes reception more robust.
 
 ## Flashing
 
+Every build produces two files per board:
+
+- `factory.bin`: the complete image, flashed once over USB at offset `0x0`.
+- `firmware.bin`: the application only, for updates over Wi-Fi.
+
+### First time, from a browser (no installation)
+
+1. Get `factory.bin` for your board from the **Actions** tab (latest successful "Build firmware"
+   run) or build it yourself (see below).
+2. Hold **BOOT** on the board while plugging it into your computer's USB port, then release it.
+3. Open [esptool-js](https://espressif.github.io/esptool-js/) in **Chrome or Edge** (Safari and
+   Firefox lack Web Serial). Click **Connect** and choose the board's serial port.
+4. Set the flash address to `0x0`, select `factory.bin` and click **Program**.
+5. Unplug and replug the board. The LED shows red, green and blue, then blinks amber.
+
+### With PlatformIO
+
 1. Install [VS Code](https://code.visualstudio.com/) with the **PlatformIO IDE** extension.
 2. Clone this repository and open the folder in VS Code.
 3. Pick the environment for your board in the PlatformIO toolbar: `waveshare-esp32-s3-zero` or
@@ -60,7 +77,15 @@ the receiver, makes reception more robust.
 4. First time only: hold **BOOT** while plugging in the USB cable, then release it.
 5. Run **Upload**, then **Monitor** to see the log (115200 baud).
 
-After the first flash, updates can be uploaded through the web UI.
+### Updates over Wi-Fi
+
+Upload `firmware.bin` (not `factory.bin`) in the web UI under Maintenance, or from a command line:
+
+```
+curl -F "firmware=@firmware.bin" http://ziggo-remote.local/update
+```
+
+The log is also available without USB: in the web UI under Maintenance, or at `/api/log`.
 
 ## Setup
 
@@ -132,6 +157,8 @@ If amber looks green on your board, flip `LED_SWAP_RG` in `platformio.ini`.
 | `POST /api/send?key=ok` | Press a key (ids as in the web UI and `keys`) |
 | `POST /api/send?report=3&usage=0x40` | Send any HID usage (for discovering keys the box understands) |
 | `GET /api/status` | Status as JSON |
+| `GET /api/log` | Recent log lines |
+| `POST /update` (multipart, field `firmware`) | Firmware update with `firmware.bin` |
 | `GET /api/map`, `POST /api/map` | Export or import the IR mapping |
 
 For Home Assistant, see [extras/home-assistant/local-rest-command.yaml](extras/home-assistant/local-rest-command.yaml).
