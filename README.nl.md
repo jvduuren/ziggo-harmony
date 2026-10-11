@@ -5,8 +5,9 @@ afstandsbediening), met een klein ESP32-bordje van ongeveer €15.
 
 🇬🇧 [English version](README.md)
 
-> **Status: in ontwikkeling.** De firmware compileert en bevat alles wat hieronder staat, maar de
-> eerste test op echte hardware moet nog gebeuren. Meld je resultaten graag via de issues.
+> **Status: werkt.** Getest met een Waveshare ESP32-S3-Zero, een Harmony Smart Control (Hub) en een
+> Ziggo Next Mini: koppelen, alle knoppen behalve spraak, en standby dat meegaat met de
+> Harmony-activiteit. De XIAO ESP32S3 is nog niet getest. Meld je resultaten graag via de issues.
 
 ## Waarom
 
@@ -38,6 +39,9 @@ Harmony-afstandsbediening ─▶ Harmony Hub ──IR──▶ ESP32 ──Bluet
 | USB-C-datakabel en een USB-lader | |
 | Optioneel: een 3D-geprint kastje | Ontwerp volgt |
 
+Een Harmony met **Hub** stuurt de IR via de Hub. De brug moet dan dus de Hub (of een IR-mini-blaster)
+kunnen zien, en niet de afstandsbediening.
+
 ### Aansluiten
 
 ```
@@ -61,8 +65,8 @@ Elke build levert per bordje twee bestanden op:
 
 ### De eerste keer, vanuit de browser (zonder installatie)
 
-1. Haal `factory.bin` voor je bordje op via het tabblad **Actions** (de laatste geslaagde run van
-   "Build firmware"), of bouw hem zelf (zie hieronder).
+1. Download `factory.bin` voor je bordje bij de nieuwste
+   [release](https://github.com/jvduuren/ziggo-harmony/releases), of bouw hem zelf (zie hieronder).
 2. Houd **BOOT** op het bordje ingedrukt terwijl je het in de USB-poort van je computer steekt en
    laat de knop daarna los.
 3. Open [esptool-js](https://espressif.github.io/esptool-js/) in **Chrome of Edge** (Safari en
@@ -88,7 +92,7 @@ Upload `firmware.bin` (niet `factory.bin`) in de webinterface onder Maintenance,
 opdrachtregel:
 
 ```
-curl -F "firmware=@firmware.bin" http://ziggo-remote.local/update
+curl -F "firmware=@firmware.bin" http://<ip-van-de-brug>/update
 ```
 
 Het log kun je ook zonder USB bekijken: in de webinterface onder Maintenance, of via `/api/log`.
@@ -99,7 +103,14 @@ Het log kun je ook zonder USB bekijken: in de webinterface onder Maintenance, of
 
 Bij de eerste start maakt de brug een wifi-netwerk aan met de naam **ZiggoRemote-Setup**. Verbind
 daar met je telefoon mee, kies je eigen netwerk en vul het wachtwoord in. De webinterface staat
-daarna op **http://ziggo-remote.local** (of op het IP-adres in het seriële log).
+daarna op het IP-adres van de brug. Dat vind je in de clientlijst van je router of in het seriële
+log. Geef hem in je router een vast adres (DHCP-reservering). **http://ziggo-remote.local** werkt
+soms ook, maar niet betrouwbaar: als wifi en Bluetooth tegelijk aan staan, slaapt de wifi en mist hij
+de meeste mDNS-vragen.
+
+Kon je niet op tijd verbinden? Staan er al wifi-gegevens in het bordje, dan gaat het setup-netwerk
+na 3 minuten dicht. Herstart dan het bordje, of wis de wifi-gegevens (BOOT 10 s, of `wifi-reset` in de
+seriële console).
 
 Zonder wifi werkt alles ook. Je leert de codes dan via de seriële console (zie verderop).
 
@@ -118,19 +129,39 @@ afstandsbediening 10 s.
 ### 3. Harmony instellen
 
 Voeg in de Harmony-app een apparaat toe op wiens IR-codes **geen ander apparaat in de kamer
-reageert**. Kies bijvoorbeeld een merk settopbox of mediaspeler dat je niet hebt. Wijs de commando's
-van dat apparaat toe aan de knoppen van je activiteit "TV kijken". Tv-power en volume blijven
-rechtstreeks naar je tv gaan, zoals je gewend bent.
+reageert**. Aanbevolen: **Microsoft "Windows Media Center"** (in de app soms "Media-pc" of "Media
+Center PC"). Dat gebruikt het RC6-protocol, heeft alle knoppen die je nodig hebt, en er is een
+kant-en-klare koppeling voor (zie stap 4).
 
-### 4. Knoppen leren
+1. Voeg het apparaat toe aan je activiteit "TV kijken" en wijs de bedieningsknoppen eraan toe:
+   pijltjes, OK, terug, menu, gids, kanalen, cijfers en afspelen. Volume en tv-power blijven naar je
+   tv of versterker gaan, zoals je gewend bent.
+2. Synchroniseer. Met een Hub-afstandsbediening (Smart Control, Companion, Elite) werken de knoppen
+   alleen binnen een activiteit, en de brug moet de **Hub** of de IR-blaster kunnen zien.
 
-Klik in de webinterface bij een knop op **Learn** en druk op de bijbehorende knop van je
-Harmony-afstandsbediening. Herhaal dit voor elke knop die je wilt gebruiken. Met **Test** stuur je
-een toets direct naar de box.
+De Harmony stuurt de **Power** van de Media-pc als een activiteit start en als hij stopt. Gekoppeld
+aan Standby gaat de box dus mee aan en uit met de activiteit. Standby is een wisselknop: loopt de box
+uit de pas, gebruik dan **Help** in de Harmony-app.
 
-Koppelingen kun je als tekst exporteren en importeren ("Share or restore mapping"). Heb je een
-koppeling gemaakt voor een bepaald Harmony-apparaatprofiel, deel hem dan, zodat anderen deze stap
-kunnen overslaan.
+### 4. Knoppen koppelen
+
+**Met het Media-pc-profiel:** importeer [extras/harmony/media-center.txt](extras/harmony/media-center.txt)
+in de webinterface onder "Share or restore mapping" (plak de tekst en klik op **Import**). Klaar.
+
+**Met een ander apparaat:** klik in de webinterface bij een knop op **Learn** en druk op de
+bijbehorende knop van je Harmony. Herhaal dit voor elke knop. Met **Test** stuur je een toets direct
+naar de box.
+
+- Klik je nog eens op **Learn**, dan krijgt een knop er een **extra** code bij, tot maximaal 3.
+  Bijvoorbeeld zowel Play als Pause voor Play/Pause. Met **×** wis je alle codes van die knop.
+- Een goede code heeft een protocolnaam zoals **RC6**, **NEC** of **SAMSUNG**. Signalen die de
+  firmware niet kan ontcijferen ("UNKNOWN") slaat hij bij het leren over, want die verschillen vaak
+  per druk. Komt een knop alleen als UNKNOWN binnen, kies dan een ander Harmony-apparaat.
+- Onder **Maintenance → Log** in de webinterface zie je welke codes er binnenkomen.
+
+Koppelingen kun je als tekst exporteren en importeren ("Share or restore mapping"). Een knop die in
+een import voorkomt, krijgt de codes uit die import. Heb je een koppeling gemaakt voor een bepaald
+Harmony-apparaatprofiel, deel hem dan, zodat anderen deze stap kunnen overslaan.
 
 ## Gebruik
 
@@ -157,7 +188,10 @@ Lijkt oranje bij jou groen, zet dan `LED_SWAP_RG` in `platformio.ini` om.
 ### Seriële console (USB, 115200 baud)
 
 `keys`, `send <key>`, `learn <key>`, `clear <key>`, `map`, `status`, `unpair`, `wifi-reset`,
-`raw <report> <usage>`
+`raw <report> <usage>`, `scan [seconden]`
+
+`scan` logt de Bluetooth-advertenties van afstandsbedieningen in de buurt, byte voor byte. Zo is
+uitgezocht welke advertentie de box verwacht.
 
 ### HTTP-API
 
@@ -168,7 +202,8 @@ Lijkt oranje bij jou groen, zet dan `LED_SWAP_RG` in `platformio.ini` om.
 | `GET /api/status` | Status als JSON |
 | `GET /api/log` | Recente logregels |
 | `POST /update` (multipart, veld `firmware`) | Firmware-update met `firmware.bin` |
-| `GET /api/map`, `POST /api/map` | IR-koppelingen exporteren of importeren |
+| `GET /api/map`, `POST /api/map` (tekst) | IR-koppelingen exporteren of importeren |
+| `POST /api/scan?seconds=60` | Bluetooth-advertenties van afstandsbedieningen in de buurt loggen |
 
 Voor Home Assistant, zie [extras/home-assistant/local-rest-command.yaml](extras/home-assistant/local-rest-command.yaml).
 
@@ -177,7 +212,9 @@ Voor Home Assistant, zie [extras/home-assistant/local-rest-command.yaml](extras/
 - Waarschijnlijk **één afstandsbediening tegelijk**: de originele afstandsbediening en de brug
   kunnen niet allebei gekoppeld zijn. Een doorgeefmodus, waarbij de originele afstandsbediening via
   de brug verbindt, is een mogelijke uitbreiding.
-- **Spraakbediening** wordt niet ondersteund.
+- **Spraak/zoeken** werkt niet: de box start dan een spraaksessie en wacht op audio van een
+  microfoon. Zoeken kan wel via het menu van de box.
+- **ziggo-remote.local** (mDNS) werkt niet betrouwbaar. Gebruik het IP-adres.
 - In de **zuinige energiestand** gaat de box in diepe slaap en wordt hij alleen wakker met de knop op
   de box zelf. Zet de energiestand op snel/hoog als je hem op afstand wilt aanzetten.
 - De webinterface en API hebben **geen wachtwoord**. Iedereen in je thuisnetwerk kan toetsen sturen

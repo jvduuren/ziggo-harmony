@@ -1,0 +1,33 @@
+# ziggo-harmony IR mapping v1: <key> <protocol> <bits> <hex value>
+# Harmony device: Microsoft "Windows Media Center" / "Media Center PC" (RC6-6-32, MCE)
+# Import this in the web UI under "Share or restore mapping", or:
+#   curl -H "Content-Type: text/plain" --data-binary @media-center.txt http://<bridge-ip>/api/map
+# Tested with a Harmony Smart Control (Hub). The Harmony sends Power when an activity starts and
+# when it stops, so the box follows the activity in and out of standby.
+power RC6 36 0xC800F040C
+home RC6 36 0xC800F0424
+back RC6 36 0xC800F0423
+guide RC6 36 0xC800F0426
+tv RC6 36 0xC800F0425
+up RC6 36 0xC800F041E
+down RC6 36 0xC800F041F
+left RC6 36 0xC800F0420
+right RC6 36 0xC800F0421
+ok RC6 36 0xC800F0422
+ch_up RC6 36 0xC800F0412
+ch_down RC6 36 0xC800F0413
+play_pause RC6 36 0xC800F0416
+play_pause RC6 36 0xC800F0418
+rewind RC6 36 0xC800F0415
+forward RC6 36 0xC800F0414
+record RC6 36 0xC800F0417
+1 RC6 36 0xC800F0401
+2 RC6 36 0xC800F0402
+3 RC6 36 0xC800F0403
+4 RC6 36 0xC800F0404
+5 RC6 36 0xC800F0405
+6 RC6 36 0xC800F0406
+7 RC6 36 0xC800F0407
+8 RC6 36 0xC800F0408
+9 RC6 36 0xC800F0409
+0 RC6 36 0xC800F0400

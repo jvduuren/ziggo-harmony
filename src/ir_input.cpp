@@ -62,4 +62,6 @@ String describe(const IrCode& code) {
          uint64ToString(code.value, 16);
 }
 
+bool decoded(const IrCode& code) { return code.protocol != decode_type_t::UNKNOWN; }
+
 }  // namespace ir

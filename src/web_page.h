@@ -44,7 +44,8 @@ Press the button for <b id="learnKey"></b> on your remote now&hellip;</div>
 
 <div class="card"><h2>Buttons</h2>
 <p class="muted">Click <b>Learn</b>, then press the matching button on your IR remote (e.g. Harmony).
-<b>Test</b> sends the key to the box directly.</p>
+Learn again to add another button for the same key (up to 3, e.g. Play and Pause); &times; forgets
+them. <b>Test</b> sends the key to the box directly.</p>
 <table id="keys"></table></div>
 
 <div class="card"><h2>Share or restore mapping</h2>
@@ -70,7 +71,7 @@ const post=(u,body)=>fetch(u,{method:'POST',body});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function load(){
   const keys=await (await fetch('/api/keys')).json();
-  $('keys').innerHTML=keys.map(k=>`<tr><td>${esc(k.label)}</td><td class="code">${k.ir?esc(k.ir):'<span class="muted">not learned</span>'}</td>
+  $('keys').innerHTML=keys.map(k=>`<tr><td>${esc(k.label)}</td><td class="code">${k.ir?esc(k.ir).replace(/\n/g,'<br>'):'<span class="muted">not learned</span>'}</td>
   <td class="act"><button onclick="post('/api/send?key=${k.id}')">Test</button>
   <button class="primary" onclick="post('/api/learn?key=${k.id}')">Learn</button>
   ${k.ir?`<button class="danger" onclick="post('/api/clear?key=${k.id}').then(load)">&times;</button>`:''}</td></tr>`).join('');

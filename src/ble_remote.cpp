@@ -33,8 +33,19 @@ const uint8_t kReportMap[] = {
     0x80, 0x25, 0x7F, 0x75, 0x08, 0x95, 0xA0, 0x81, 0x22, 0xC0, 0xC0,
 };
 
-// Manufacturer data in the advertisement: company 0x0093 (Universal Electronics), data 00 80.
-const uint8_t kManufacturerData[] = {0x93, 0x00, 0x00, 0x80};
+// Advertisement and scan response, byte for byte as captured from the original remote in
+// pairing mode (docs/ble-profile.md). The box only lists remotes that advertise as limited
+// discoverable with the Remote Control appearance.
+const uint8_t kAdvData[] = {
+    0x02, 0x01, 0x05,                    // flags: LE limited discoverable, no BR/EDR
+    0x03, 0x19, 0x80, 0x01,              // appearance 0x0180: generic remote control
+    0x05, 0x02, 0x12, 0x18, 0x0F, 0x18,  // incomplete 16-bit services: HID, Battery
+    0x0B, 0x08, 'R', 'e', 'm', 'o', 't', 'e', 'U', 'n', 'i', 't',  // shortened name
+    0x05, 0xFF, 0x93, 0x00, 0x00, 0x80,  // manufacturer data: UEI (0x0093), 00 80
+};
+const uint8_t kScanResponse[] = {
+    0x0B, 0x09, 'R', 'e', 'm', 'o', 't', 'e', 'U', 'n', 'i', 't',  // complete name
+};
 
 NimBLEServer* server = nullptr;
 NimBLEHIDDevice* hid = nullptr;
@@ -139,7 +150,36 @@ class AlertCallbacks : public NimBLECharacteristicCallbacks {
   }
 };
 
+class ScanCallbacks : public NimBLEScanCallbacks {
+ public:
+  std::vector<std::string> seen;
+
+  void onResult(const NimBLEAdvertisedDevice* dev) override {
+    const std::string mfr = dev->getManufacturerData();
+    bool uei = mfr.size() >= 2 && (uint8_t)mfr[0] == 0x93 && mfr[1] == 0x00;
+    bool hidService = dev->isAdvertisingService(NimBLEUUID((uint16_t)0x1812));
+    if (!uei && !hidService && dev->getName() != kBleName) return;
+
+    const std::vector<uint8_t>& payload = dev->getPayload();
+    String hex = toHex(payload.data(), payload.size());
+    std::string key = dev->getAddress().toString() + hex.c_str();
+    for (const std::string& s : seen) {
+      if (s == key) return;  // log each distinct advertisement once
+    }
+    if (seen.size() >= 24) return;
+    seen.push_back(key);
+    logf("[scan] %s (type %u) adv %u rssi %d name '%s'\n", dev->getAddress().toString().c_str(),
+         dev->getAddressType(), dev->getAdvType(), dev->getRSSI(), dev->getName().c_str());
+    logf("[scan]   %s\n", hex.c_str());
+  }
+
+  void onScanEnd(const NimBLEScanResults&, int) override {
+    logf("[scan] done (%u distinct)\n", (unsigned)seen.size());
+  }
+};
+
 ServerCallbacks serverCallbacks;
+ScanCallbacks scanCallbacks;
 ReportCallbacks reportCallbacks;
 LogWriteCallbacks vendorOutCallbacks("vendor report 8");
 LogWriteCallbacks hidControlCallbacks("HID control point");
@@ -214,12 +254,13 @@ void begin() {
   server->start();
 
   NimBLEAdvertisementData adv;
-  adv.setFlags(BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP);
-  adv.setName(kBleName);
-  adv.setCompleteServices16({NimBLEUUID((uint16_t)0x1812), NimBLEUUID((uint16_t)0x180F)});
-  adv.setManufacturerData(kManufacturerData, sizeof(kManufacturerData));
+  adv.addData(kAdvData, sizeof(kAdvData));
+  NimBLEAdvertisementData scanResponse;
+  scanResponse.addData(kScanResponse, sizeof(kScanResponse));
   NimBLEAdvertising* advertising = NimBLEDevice::getAdvertising();
   advertising->setAdvertisementData(adv);
+  advertising->setScanResponseData(scanResponse);
+  advertising->enableScanResponse(true);
   advertising->start();
 
   logf("[ble] advertising as %s (%s), %d bond(s)\n", kBleName, ownAddress().c_str(),
@@ -275,6 +316,18 @@ String boxMessages() {
     if (line.length()) out += line + "\n";
   }
   return out;
+}
+
+void scan(uint32_t seconds) {
+  NimBLEScan* scanner = NimBLEDevice::getScan();
+  if (scanner->isScanning()) scanner->stop();
+  scanCallbacks.seen.clear();
+  scanner->setScanCallbacks(&scanCallbacks, true);
+  scanner->setActiveScan(true);  // also fetch the scan response
+  scanner->setInterval(100);
+  scanner->setWindow(60);
+  logf("[scan] listening for %lu s\n", (unsigned long)seconds);
+  scanner->start(seconds * 1000, false, true);
 }
 
 }  // namespace ble

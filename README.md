@@ -5,8 +5,9 @@ using a small ESP32 board of about €15.
 
 🇳🇱 [Nederlandse versie](README.nl.md)
 
-> **Status: early development.** The firmware builds and implements everything below, but the first
-> test on real hardware is still pending. Please report your results in the issues.
+> **Status: working.** Tested with a Waveshare ESP32-S3-Zero, a Harmony Smart Control (Hub) and a
+> Ziggo Next Mini: pairing, every button except voice, and standby following the Harmony activity.
+> The XIAO ESP32S3 is untested so far. Please report your results in the issues.
 
 ## Why
 
@@ -38,6 +39,9 @@ Harmony remote ─▶ Harmony Hub ──IR──▶ ESP32 ──Bluetooth LE─�
 | USB-C data cable and a USB power supply | |
 | Optional: a 3D-printed case | Design follows |
 
+With a **Hub**-based Harmony the IR comes from the Hub, so the bridge needs to see the Hub (or an IR
+mini blaster), not the remote.
+
 ### Wiring
 
 ```
@@ -60,8 +64,8 @@ Every build produces two files per board:
 
 ### First time, from a browser (no installation)
 
-1. Get `factory.bin` for your board from the **Actions** tab (latest successful "Build firmware"
-   run) or build it yourself (see below).
+1. Download `factory.bin` for your board from the latest
+   [release](https://github.com/jvduuren/ziggo-harmony/releases), or build it yourself (see below).
 2. Hold **BOOT** on the board while plugging it into your computer's USB port, then release it.
 3. Open [esptool-js](https://espressif.github.io/esptool-js/) in **Chrome or Edge** (Safari and
    Firefox lack Web Serial). Click **Connect** and choose the board's serial port.
@@ -82,7 +86,7 @@ Every build produces two files per board:
 Upload `firmware.bin` (not `factory.bin`) in the web UI under Maintenance, or from a command line:
 
 ```
-curl -F "firmware=@firmware.bin" http://ziggo-remote.local/update
+curl -F "firmware=@firmware.bin" http://<bridge-ip>/update
 ```
 
 The log is also available without USB: in the web UI under Maintenance, or at `/api/log`.
@@ -92,8 +96,14 @@ The log is also available without USB: in the web UI under Maintenance, or at `/
 ### 1. Wi-Fi (optional, recommended)
 
 On first start the bridge opens a Wi-Fi network called **ZiggoRemote-Setup**. Connect to it with
-your phone, pick your home network and enter the password. The web UI is then at
-**http://ziggo-remote.local** (or the IP address shown in the serial log).
+your phone, pick your home network and enter the password. The web UI is then at the bridge's IP
+address, which you find in your router's client list or in the serial log. Give it a fixed address in
+your router (DHCP reservation). **http://ziggo-remote.local** sometimes works too, but not reliably:
+with Wi-Fi and Bluetooth both active the Wi-Fi radio sleeps and misses most mDNS queries.
+
+Missed the setup network? If the board already holds Wi-Fi credentials, the setup network closes
+after 3 minutes. Restart the board, or forget the Wi-Fi settings (BOOT 10 s, or `wifi-reset` on the
+serial console).
 
 Without Wi-Fi everything still works. You then learn codes through the serial console instead (see
 below).
@@ -111,17 +121,38 @@ the box for 5 s, then **TV + 0** on the remote for 10 s.
 
 ### 3. Set up the Harmony
 
-Add a device in the Harmony app whose IR codes **no other device in the room responds to**. For
-example, pick a set-top box or media player brand you do not own. Assign its commands to the
-buttons of your "Watch TV" activity. TV power and volume keep going straight to your TV, as before.
+Add a device in the Harmony app whose IR codes **no other device in the room responds to**.
+Recommended: **Microsoft "Windows Media Center"** (sometimes listed as "Media Center PC"). It uses
+the RC6 protocol, has every button you need, and there is a ready-made mapping for it (see step 4).
 
-### 4. Learn the buttons
+1. Add the device to your "Watch TV" activity and assign the control buttons to it: arrows, OK,
+   back, menu, guide, channels, digits and playback. Volume and TV power keep going to your TV or
+   receiver, as before.
+2. Sync. With a Hub-based remote (Smart Control, Companion, Elite) the buttons only work inside an
+   activity, and the bridge must be able to see the **Hub** or its IR blaster.
 
-In the web UI, click **Learn** next to a button and press the matching button on your Harmony
-remote. Repeat for every button you want to use. Use **Test** to send a key to the box directly.
+The Harmony sends the Media Center **Power** command when an activity starts and when it stops.
+Mapped to Standby, the box follows the activity on and off. Standby is a toggle: if the box gets out
+of step, use **Help** in the Harmony app.
 
-Mappings can be exported and imported as text ("Share or restore mapping"). If you made a mapping for
-a specific Harmony device profile, please share it so others can skip this step.
+### 4. Map the buttons
+
+**With the Media Center profile:** import [extras/harmony/media-center.txt](extras/harmony/media-center.txt)
+in the web UI under "Share or restore mapping" (paste the text and click **Import**). Done.
+
+**With another device:** in the web UI, click **Learn** next to a button and press the matching
+button on your Harmony. Repeat for every button. Use **Test** to send a key to the box directly.
+
+- Clicking **Learn** again **adds** another code to a key, up to 3, for example both Play and Pause
+  for Play/Pause. **×** forgets all codes of that key.
+- A good code has a protocol name such as **RC6**, **NEC** or **SAMSUNG**. Signals the firmware
+  cannot decode ("UNKNOWN") are skipped while learning, because they often differ on every press. If
+  a button only ever arrives as UNKNOWN, pick another Harmony device.
+- **Maintenance → Log** in the web UI shows which codes arrive.
+
+Mappings can be exported and imported as text ("Share or restore mapping"). A key that appears in an
+import gets the codes from that import. If you made a mapping for a specific Harmony device profile,
+please share it so others can skip this step.
 
 ## Using it
 
@@ -148,7 +179,10 @@ If amber looks green on your board, flip `LED_SWAP_RG` in `platformio.ini`.
 ### Serial console (USB, 115200 baud)
 
 `keys`, `send <key>`, `learn <key>`, `clear <key>`, `map`, `status`, `unpair`, `wifi-reset`,
-`raw <report> <usage>`
+`raw <report> <usage>`, `scan [seconds]`
+
+`scan` logs the Bluetooth advertisements of nearby remotes byte for byte. That is how the
+advertisement the box expects was found.
 
 ### HTTP API
 
@@ -159,7 +193,8 @@ If amber looks green on your board, flip `LED_SWAP_RG` in `platformio.ini`.
 | `GET /api/status` | Status as JSON |
 | `GET /api/log` | Recent log lines |
 | `POST /update` (multipart, field `firmware`) | Firmware update with `firmware.bin` |
-| `GET /api/map`, `POST /api/map` | Export or import the IR mapping |
+| `GET /api/map`, `POST /api/map` (text) | Export or import the IR mapping |
+| `POST /api/scan?seconds=60` | Log the Bluetooth advertisements of nearby remotes |
 
 For Home Assistant, see [extras/home-assistant/local-rest-command.yaml](extras/home-assistant/local-rest-command.yaml).
 
@@ -168,7 +203,9 @@ For Home Assistant, see [extras/home-assistant/local-rest-command.yaml](extras/h
 - Most likely **one remote at a time**: the original remote and the bridge cannot both be paired.
   A pass-through mode, where the original remote connects through the bridge, is a possible future
   feature.
-- **Voice search** is not supported.
+- **Voice search** does not work: the box starts a voice session and waits for audio from a
+  microphone. Search through the box's menu instead.
+- **ziggo-remote.local** (mDNS) is unreliable. Use the IP address.
 - In **eco energy mode** the box falls into deep standby and only wakes up with the button on the
   box itself. Set the box's energy mode to fast/high if you want to switch it on remotely.
 - The web UI and API have **no password**. Anyone on your local network can send keys or upload

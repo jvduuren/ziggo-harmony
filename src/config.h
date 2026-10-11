@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#define FW_VERSION "0.1.0"
+#define FW_VERSION "0.2.0"
 
 // GPIO of the 38 kHz IR receiver output (VS1838B / TSOP38238). Set per board in platformio.ini.
 #ifndef IR_PIN

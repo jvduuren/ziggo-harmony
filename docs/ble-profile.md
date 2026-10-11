@@ -17,10 +17,23 @@ iOS hides the HID service from apps; macOS shows it.
 
 ## Advertisement
 
-- Complete local name: `RemoteUnit`
+Captured raw with the bridge's own `scan` command (remote in pairing mode, TV + 0):
+
+```
+adv:      02 01 05  03 19 80 01  05 02 12 18 0F 18  0B 08 "RemoteUnit"  05 FF 93 00 00 80
+scan rsp: 0B 09 "RemoteUnit"
+```
+
+- Flags `0x05`: **LE Limited Discoverable**, BR/EDR not supported
+- Appearance `0x0180`: Generic Remote Control
+- Incomplete list of 16-bit service UUIDs: `0x1812` Human Interface Device, `0x180F` Battery Service
+- Shortened local name `RemoteUnit` in the advertisement, complete name in the scan response
 - Manufacturer data: company ID `0x0093` (Universal Electronics, Inc.), data `00 80`
-- 16-bit service UUIDs: `0x1812` Human Interface Device, `0x180F` Battery Service
-- Connectable
+- Connectable undirected (ADV_IND), public address (UEI OUI `B8:C0:65`)
+
+The box's pairing screen ignores a remote that advertises as General Discoverable without the
+appearance: firmware with only name, services and manufacturer data was never connected to.
+With the exact advertisement above it paired immediately.
 
 ## GATT services
 
@@ -73,7 +86,7 @@ all zeros. Reports 7, 8 and 0x1F are most likely voice and the UEI QuickSet conf
 
 | Button | Report | Usage | HID name |
 |---|---|---|---|
-| Standby (box) | 3 | `0x003F` | (no common standard name) |
+| Standby (box) | 3 | `0x003F` | (no common standard name), see note below |
 | Home | 3 | `0x0223` | AC Home |
 | Back | 3 | `0x0224` | AC Back |
 | Guide | 3 | `0x008D` | Media Select Program Guide |
@@ -92,5 +105,10 @@ all zeros. Reports 7, 8 and 0x1F are most likely voice and the UEI QuickSet conf
 
 TV power, volume +/−, mute and source send no BLE report: the remote sends those as IR straight to
 the TV.
+
+Standby: when the bridge sends `0x003F`, the box answers on report 8 with `07 00 <seq> 00 01 41 F1 01`
+(other keys get `06 00 <seq> 00 01 31 F5`) but stays on. Consumer Power `0x0030` (and System
+Power Down, report 2 `0x0081`) toggles standby, so the bridge sends `0x0030`. Consumer Sleep
+`0x0034` and System Sleep `0x0082` are ignored.
 
 The first button press after the remote has been idle for a while may be lost while it reconnects.

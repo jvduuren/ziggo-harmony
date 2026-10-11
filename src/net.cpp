@@ -64,7 +64,7 @@ void handleKeys() {
   for (size_t i = 0; i < kKeyCount; i++) {
     if (i) json += ",";
     json += "{\"id\":" + jsonString(kKeys[i].id) + ",\"label\":" + jsonString(kKeys[i].label) +
-            ",\"ir\":" + jsonString(ir::describe(keymap::code(i))) + "}";
+            ",\"ir\":" + jsonString(keymap::describe(i)) + "}";
   }
   web.send(200, "application/json", json + "]");
 }
@@ -134,6 +134,10 @@ void startWeb() {
   web.on("/api/map", HTTP_POST, [] { web.send(200, "text/plain", keymap::importText(web.arg("plain"))); });
   web.on("/api/unpair", HTTP_POST, [] {
     ble::unpair();
+    sendOk();
+  });
+  web.on("/api/scan", HTTP_POST, [] {
+    ble::scan(web.hasArg("seconds") ? web.arg("seconds").toInt() : 60);
     sendOk();
   });
   web.on("/api/wifi-reset", HTTP_POST, [] {

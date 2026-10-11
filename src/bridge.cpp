@@ -52,7 +52,13 @@ void handleIr(const IrEvent& event) {
   lastAt = now;
 
   if (learning >= 0) {
-    keymap::assign(learning, event.code);
+    // Keep waiting for a real code: a stray UNKNOWN frame often precedes the button's code,
+    // and learning it would also swallow the real code right after it.
+    if (!ir::decoded(event.code)) {
+      logf("[learn] skipped %s, waiting for a decodable code\n", ir::describe(event.code).c_str());
+      return;
+    }
+    keymap::add(learning, event.code);
     logf("[learn] %s = %s\n", kKeys[learning].id, ir::describe(event.code).c_str());
     led::flash(0, 30, 0, 400);
     learning = -1;

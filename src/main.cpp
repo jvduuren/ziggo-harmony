@@ -18,7 +18,7 @@ namespace {
 void printHelp() {
   Serial.println(
       "commands: keys | send <key> | raw <report> <usage> | learn <key> | clear <key> |\n"
-      "          map | status | unpair | wifi-reset | restart");
+      "          map | status | unpair | scan [seconds] | wifi-reset | restart");
 }
 
 void printStatus() {
@@ -36,8 +36,9 @@ void runCommand(String line) {
 
   if (cmd == "keys") {
     for (size_t i = 0; i < kKeyCount; i++) {
-      Serial.printf("  %-11s %-13s %s\n", kKeys[i].id, kKeys[i].label,
-                    ir::describe(keymap::code(i)).c_str());
+      String codes = keymap::describe(i);
+      codes.replace("\n", ", ");
+      Serial.printf("  %-11s %-13s %s\n", kKeys[i].id, kKeys[i].label, codes.c_str());
     }
   } else if (cmd == "send" || cmd == "learn" || cmd == "clear") {
     int key = keymap::find(arg.c_str());
@@ -63,6 +64,8 @@ void runCommand(String line) {
     printStatus();
   } else if (cmd == "unpair") {
     ble::unpair();
+  } else if (cmd == "scan") {
+    ble::scan(arg.length() ? arg.toInt() : 60);
   } else if (cmd == "wifi-reset") {
     net::resetWifi();
   } else if (cmd == "restart") {
