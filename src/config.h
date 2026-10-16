@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#define FW_VERSION "0.2.0"
+#define FW_VERSION "0.2.1"
 
 // GPIO of the 38 kHz IR receiver output (VS1838B / TSOP38238). Set per board in platformio.ini.
 #ifndef IR_PIN
@@ -20,8 +20,12 @@ constexpr const char* kBleName = "RemoteUnit";
 // Release a held key when no IR frame arrived for this long. Harmony repeats a held
 // button every ~45-115 ms depending on the protocol.
 constexpr uint32_t kReleaseTimeoutMs = 200;
-// Duration of a key press sent from the web UI, API or serial console.
+// Duration of a key press sent from the web UI, API or serial console, and of the tap a short IR
+// press turns into.
 constexpr uint32_t kTapDurationMs = 80;
+// IR frames still arriving this long after the first one mean the button is really held: the key
+// is then pressed again and held, so the box auto-repeats. A short Harmony press lasts ~0.2 s.
+constexpr uint32_t kHoldAfterMs = 500;
 constexpr uint32_t kLearnTimeoutMs = 20000;
 
 constexpr uint32_t kUnpairHoldMs = 5000;

@@ -20,18 +20,28 @@ IrCode last{};
 int lastKey = -1;
 uint32_t lastAt = 0;
 
+// A short IR press becomes a short tap: the box starts auto-repeating after ~0.4 s, and an IR
+// burst plus the release timeout already lasts that long, so arrows moved two steps. Only when
+// the IR frames keep coming past kHoldAfterMs is the key pressed again and held.
+bool keyDown = false;  // the held key's HID usage is currently down at the box
+bool holding = false;  // the button is held long enough to pass through as a held key
+
 void pressKey(int index) {
   ble::press(kKeys[index].report, kKeys[index].usage);
   heldKey = index;
   heldSince = millis();
+  keyDown = true;
+  holding = false;
   logf("[key] %s down%s\n", kKeys[index].id, ble::ready() ? "" : " (box not connected)");
 }
 
 void releaseKey() {
   if (heldKey < 0) return;
-  ble::release(kKeys[heldKey].report);
-  logf("[key] %s up (%lu ms)\n", kKeys[heldKey].id, millis() - heldSince);
+  if (keyDown) ble::release(kKeys[heldKey].report);
+  logf("[key] %s up (%lu ms%s)\n", kKeys[heldKey].id, millis() - heldSince, holding ? ", held" : "");
   heldKey = -1;
+  keyDown = false;
+  holding = false;
 }
 
 }  // namespace
@@ -87,7 +97,19 @@ void handleIr(const IrEvent& event) {
 
 void tick() {
   uint32_t now = millis();
-  if (heldKey >= 0 && now - lastFrameAt > kReleaseTimeoutMs) releaseKey();
+  if (heldKey >= 0) {
+    if (now - lastFrameAt > kReleaseTimeoutMs) {
+      releaseKey();
+    } else if (keyDown && !holding && now - heldSince >= kTapDurationMs) {
+      ble::release(kKeys[heldKey].report);  // end of the tap; the IR button may still be down
+      keyDown = false;
+    } else if (!keyDown && !holding && (int32_t)(lastFrameAt - heldSince) >= (int32_t)kHoldAfterMs) {
+      // Signed: with a single frame lastFrameAt is a millisecond before heldSince.
+      ble::press(kKeys[heldKey].report, kKeys[heldKey].usage);  // really held: let the box repeat
+      keyDown = true;
+      holding = true;
+    }
+  }
   if (learning >= 0 && now - learningSince > kLearnTimeoutMs) {
     logf("[learn] timed out\n");
     learning = -1;
