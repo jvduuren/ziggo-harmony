@@ -20,10 +20,10 @@ plug_w = 12.0;         // USB-C plug overmold of your cable
 plug_h = 6.4;
 // Positions on the board, seen from the top with the USB-C on the left:
 // x = distance from the USB edge, y = distance from the bottom (front) edge.
-led_x = 8.5;           // board LED centre
+led_x = 8.75;           // board LED centre
 led_y = 9.0;
 led_h = 1.0;           // LED height above the board
-boot_x = 9.0;          // BOOT button centre, same reference as the LED
+boot_x = 8.75;          // BOOT button centre, same reference as the LED
 boot_y = 5.0;
 boot_h = 1.6;          // BOOT button top above the board
 
