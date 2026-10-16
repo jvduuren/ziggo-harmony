@@ -9,7 +9,7 @@
 part = "all";
 
 /* [Board: Waveshare ESP32-S3-Zero] */
-board_l = 23.7;        // along the USB axis
+board_l = 23.8;        // along the USB axis
 board_w = 18.0;
 board_t = 1.7;
 comp_h = 7.0;          // tallest part on top of the board, USB-C receptacle excluded
