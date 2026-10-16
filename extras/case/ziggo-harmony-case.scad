@@ -43,7 +43,8 @@ board_clr = 0.15;      // clearance around the board (it must not rattle)
 lip_h = 3.0;           // lid lip that drops inside the long walls
 lip_t = 1.2;
 snap = 0.5;            // snap bump height
-pipe_d = 3.0;          // light pipe
+pipe_d = 3.0;          // light pipe hole (designed; FDM prints holes ~0.2 mm small)
+pipe_fit = 2.8;        // printed light pipe diameter; the 3MF has 2.6-2.9 to pick a snug one
 boot_hole = 2.0;       // paperclip guide for the BOOT button
 corner_r = 2.0;
 $fn = 48;
@@ -135,7 +136,7 @@ module lid() {
 
 // The lid is printed upside down; mirrored in y so lid holes line up over the board.
 pipe_l = lid_t + inner_h - board_top - led_h - 0.3;
-module pipe() { cylinder(d = pipe_d, h = pipe_l); }
+module pipe() { cylinder(d = pipe_fit, h = pipe_l); }
 
 // Fit check: the base with stand-ins for the board, USB-C, LED, BOOT and jack, and the lid
 // lifted above it in its mounted orientation.
