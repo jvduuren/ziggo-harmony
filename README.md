@@ -35,9 +35,16 @@ Harmony remote ─▶ Harmony Hub ──IR──▶ ESP32 ──Bluetooth LE─�
 | Part | Notes |
 |---|---|
 | **Waveshare ESP32-S3-Zero** or **Seeed Studio XIAO ESP32S3** | Must be an ESP32-**S3** (BLE + Wi-Fi). Not the S2, which has no Bluetooth. |
-| **38 kHz IR receiver**, VS1838B or TSOP38238 | A bare 3-pin part keeps the case small |
+| **38 kHz IR receiver**, VS1838B or TSOP38238, or a ready-made IR eye on a 3.5 mm cable | See "Receiver on a cable" below |
+| Optional: 3.5 mm stereo panel jack (thread ≈ 8 mm) | For the IR eye cable; fits the case |
 | USB-C data cable and a USB power supply | |
-| Optional: a 3D-printed case | Design follows |
+| Optional: a 3D-printed case | [extras/case](extras/case): for the S3-Zero with a 3.5 mm jack |
+
+**Case.** [extras/case](extras/case) holds a parametric OpenSCAD design, STL files and Bambu Studio
+projects (Bambu Lab A1, PLA): a base for the ESP32-S3-Zero with the USB-C opening on one end and the
+3.5 mm jack on the other, and a snap-on lid with a light pipe over the board LED (print it in
+transparent filament) and a paperclip guide to the BOOT button. Outside 53 × 22 × 16 mm. All sizes
+are variables at the top of the `.scad` file.
 
 With a **Hub**-based Harmony the IR comes from the Hub, so the bridge needs to see the Hub (or an IR
 mini blaster), not the remote.

@@ -35,9 +35,16 @@ Harmony-afstandsbediening ─▶ Harmony Hub ──IR──▶ ESP32 ──Bluet
 | Onderdeel | Opmerking |
 |---|---|
 | **Waveshare ESP32-S3-Zero** of **Seeed Studio XIAO ESP32S3** | Moet een ESP32-**S3** zijn (Bluetooth LE en wifi). Geen S2, die heeft geen Bluetooth. |
-| **38 kHz IR-ontvanger**, VS1838B of TSOP38238 | Een los onderdeel met 3 pootjes houdt het kastje klein |
+| **38 kHz IR-ontvanger**, VS1838B of TSOP38238, of een kant-en-klaar IR-oogje aan een 3,5 mm-kabel | Zie "Ontvanger aan een kabel" hieronder |
+| Optioneel: 3,5 mm-stereo-inbouwbus (schroefdraad ≈ 8 mm) | Voor de kabel van het IR-oogje; past in het kastje |
 | USB-C-datakabel en een USB-lader | |
-| Optioneel: een 3D-geprint kastje | Ontwerp volgt |
+| Optioneel: een 3D-geprint kastje | [extras/case](extras/case): voor de S3-Zero met een 3,5 mm-bus |
+
+**Kastje.** In [extras/case](extras/case) staan een parametrisch OpenSCAD-ontwerp, STL-bestanden en
+Bambu Studio-projecten (Bambu Lab A1, PLA): een onderbak voor de ESP32-S3-Zero met de USB-C-opening aan
+de ene kant en de 3,5 mm-bus aan de andere, en een klikdeksel met een lichtgeleider boven de led (print
+die in transparant filament) en een geleidebuisje voor een paperclip naar de BOOT-knop. Buitenmaat
+53 × 22 × 16 mm. Alle maten staan als variabelen bovenaan het `.scad`-bestand.
 
 Een Harmony met **Hub** stuurt de IR via de Hub. De brug moet dan dus de Hub (of een IR-mini-blaster)
 kunnen zien, en niet de afstandsbediening.
