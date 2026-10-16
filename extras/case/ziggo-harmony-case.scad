@@ -39,6 +39,7 @@ wall = 2.0;
 floor_t = 1.6;
 lid_t = 1.6;
 clr = 0.4;             // clearance around parts
+board_clr = 0.15;      // clearance around the board (it must not rattle)
 lip_h = 3.0;           // lid lip that drops inside the long walls
 lip_t = 1.2;
 snap = 0.5;            // snap bump height
@@ -47,15 +48,15 @@ corner_r = 2.0;
 $fn = 48;
 
 // ---- derived ----
-inner_l = usb_protrude + clr + board_l + wire_space + body_l + clr;
-inner_w = max(board_w, body_d) + 2 * clr;
+inner_l = usb_protrude + board_clr + board_l + wire_space + body_l + clr;
+inner_w = max(board_w + 2 * board_clr, body_d + 2 * clr);
 board_z = under_h;                      // board bottom above the inner floor
 board_top = board_z + board_t;
 inner_h = max(board_top + comp_h + 1.0, body_d + 2 * clr + 1.0);
 outer_l = inner_l + 2 * wall;
 outer_w = inner_w + 2 * wall;
 outer_h = floor_t + inner_h;
-board_x0 = usb_protrude + clr;          // board USB edge, from the USB wall's inner face
+board_x0 = usb_protrude + board_clr;    // board USB edge, from the USB wall's inner face
 board_y0 = (inner_w - board_w) / 2;
 jack_z = inner_h / 2;
 jack_y = inner_w / 2;
@@ -83,14 +84,24 @@ module base() {
     }
   }
   at_inner() {
-    // board supports in the middle: the edge pads have solder joints underneath
+    // board supports in the middle and under the corners (no tilting); the edge pads have
+    // solder joints underneath, so the corner pads stay small
     for (x = [board_x0 + board_l * 0.3, board_x0 + board_l * 0.75])
       translate([x - 2, inner_w / 2 - 2, 0]) cube([4, 4, board_z]);
+    for (x = [board_x0, board_x0 + board_l - 2], y = [board_y0, board_y0 + board_w - 2])
+      translate([x, y, 0]) cube([2, 2, board_z]);
     // end stops behind the board, so pushing the USB plug in cannot shove it back
     for (y = [board_y0 + 2, board_y0 + board_w - 4])
-      translate([board_x0 + board_l + clr / 2, y, 0]) cube([1.6, 2, board_top + 1]);
+      translate([board_x0 + board_l + board_clr, y, 0]) cube([1.6, 2, board_top + 1]);
+    // stops at the USB end, beside the receptacle: the receptacle is smaller than the plug
+    // opening and would otherwise let the board slide into it
+    for (y = [board_y0, board_y0 + board_w - 3.5])
+      translate([0, y, 0]) cube([board_x0 - board_clr, 3.5, board_top + 1]);
   }
 }
+
+// Lid pins pressing the board down at three corners: not the USB corner with the wires.
+hold_pts = [[board_l - 1.5, 1.5], [board_l - 1.5, board_w - 1.5], [1.5, board_w - 1.5]];
 
 module lid() {
   difference() {
@@ -102,7 +113,11 @@ module lid() {
         translate([wall + inner_l * 0.2, y < outer_w / 2 ? y - snap + 0.01 : y + lip_t - 0.01, lid_t + lip_h / 2 - 0.5])
           cube([inner_l * 0.6, snap, 1.0]);
       }
-      // hold-down tube around the light pipe, ending just above the LED
+      // pins holding the board down (0.1 mm press)
+      for (p = hold_pts)
+        translate([wall + board_x0 + p[0], outer_w - wall - board_y0 - p[1], lid_t])
+          cylinder(d = 2.5, h = inner_h - board_top + 0.1);
+      // tube around the light pipe, ending just above the LED
       translate([wall + board_x0 + led_x, outer_w - wall - board_y0 - led_y, lid_t])
         cylinder(d = pipe_d + 2.4, h = inner_h - board_top - led_h - 0.5);
     }
