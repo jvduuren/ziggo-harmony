@@ -44,7 +44,9 @@ Harmony-afstandsbediening ─▶ Harmony Hub ──IR──▶ ESP32 ──Bluet
 Bambu Studio-projecten (Bambu Lab A1, PLA): een onderbak voor de ESP32-S3-Zero met de USB-C-opening aan
 de ene kant en de 3,5 mm-bus aan de andere, en een klikdeksel met een lichtgeleider boven de led (print
 die in transparant filament) en een geleidebuisje voor een paperclip naar de BOOT-knop. Buitenmaat
-53 × 22 × 16 mm. Alle maten staan als variabelen bovenaan het `.scad`-bestand.
+53 × 22 × 16 mm. Alle maten staan als variabelen bovenaan het `.scad`-bestand. Geprinte gaten vallen iets kleiner
+uit; daarom heeft het lichtgeleider-project vier diktes (2,6-2,9 mm). Op een Bambu Lab A1 klemt die
+van 2,8 mm precies goed.
 
 Een Harmony met **Hub** stuurt de IR via de Hub. De brug moet dan dus de Hub (of een IR-mini-blaster)
 kunnen zien, en niet de afstandsbediening.

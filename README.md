@@ -44,7 +44,8 @@ Harmony remote ─▶ Harmony Hub ──IR──▶ ESP32 ──Bluetooth LE─�
 projects (Bambu Lab A1, PLA): a base for the ESP32-S3-Zero with the USB-C opening on one end and the
 3.5 mm jack on the other, and a snap-on lid with a light pipe over the board LED (print it in
 transparent filament) and a paperclip guide to the BOOT button. Outside 53 × 22 × 16 mm. All sizes
-are variables at the top of the `.scad` file.
+are variables at the top of the `.scad` file. Printed holes come out a bit small, so the
+light-pipe project has four diameters (2.6-2.9 mm); on a Bambu Lab A1 the 2.8 mm one fits snugly.
 
 With a **Hub**-based Harmony the IR comes from the Hub, so the bridge needs to see the Hub (or an IR
 mini blaster), not the remote.
