@@ -44,6 +44,7 @@ lip_h = 3.0;           // lid lip that drops inside the long walls
 lip_t = 1.2;
 snap = 0.5;            // snap bump height
 pipe_d = 3.0;          // light pipe
+boot_hole = 2.0;       // paperclip guide for the BOOT button
 corner_r = 2.0;
 $fn = 48;
 
@@ -117,6 +118,9 @@ module lid() {
       for (p = hold_pts)
         translate([wall + board_x0 + p[0], outer_w - wall - board_y0 - p[1], lid_t])
           cylinder(d = 2.5, h = inner_h - board_top + 0.1);
+      // guide tube for a paperclip, ending just above the BOOT button
+      translate([wall + board_x0 + boot_x, outer_w - wall - board_y0 - boot_y, lid_t])
+        cylinder(d = boot_hole + 2.0, h = inner_h - board_top - boot_h - 0.5);
       // tube around the light pipe, ending just above the LED
       translate([wall + board_x0 + led_x, outer_w - wall - board_y0 - led_y, lid_t])
         cylinder(d = pipe_d + 2.4, h = inner_h - board_top - led_h - 0.5);
@@ -125,7 +129,7 @@ module lid() {
     translate([wall + board_x0 + led_x, outer_w - wall - board_y0 - led_y, -1])
       cylinder(d = pipe_d + 0.2, h = inner_h + 2);
     // BOOT pin hole
-    translate([wall + board_x0 + boot_x, outer_w - wall - board_y0 - boot_y, -1]) cylinder(d = 2.0, h = lid_t + 2);
+    translate([wall + board_x0 + boot_x, outer_w - wall - board_y0 - boot_y, -1]) cylinder(d = boot_hole, h = inner_h + 2);
   }
 }
 
