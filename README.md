@@ -55,6 +55,18 @@ The common VS1838B pin order, looking at the dome with the legs down, is **OUT, 
 differ, so check the datasheet of yours. An optional 100 nF capacitor between VCC and GND, close to
 the receiver, makes reception more robust.
 
+**Receiver on a cable (recommended with a Hub).** A ready-made IR "eye" on a 3.5 mm cable (an "IR
+extender cable" for set-top boxes) lets you put the receiver right next to the Hub while the ESP32
+sits elsewhere. Mount a 3.5 mm panel jack in the case. The wiring of these cables differs per brand,
+so measure it first with a multimeter in diode mode (red in VΩ):
+
+- **GND** is the contact that, with red on it, shows about 0.6–0.8 V to both other contacts (OL the
+  other way round);
+- between the other two it only conducts from **OUT** (red) to **VCC** (black).
+
+For the tested eye (Amazon B07KM1Q48Y) that is: tip = VCC, ring = OUT, sleeve = GND. Such eyes often
+have no pull-up of their own on OUT, so the firmware enables GPIO1's internal pull-up.
+
 ## Flashing
 
 Every build produces two files per board:

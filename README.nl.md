@@ -56,6 +56,18 @@ De gangbare pinvolgorde van de VS1838B, kijkend op het bolletje met de pootjes n
 condensator van 100 nF tussen VCC en GND, vlak bij de ontvanger, is optioneel en maakt de ontvangst
 stabieler.
 
+**Ontvanger aan een kabel (aanrader bij een Hub).** Een kant-en-klaar IR-oogje aan een 3,5 mm-kabel
+(een "IR-verlengkabel" voor settopboxen) laat je de ontvanger vlak bij de Hub leggen, terwijl de ESP32
+ergens anders ligt. Monteer een 3,5 mm-inbouwbus in het kastje. De bedrading van zulke kabels
+verschilt per merk, dus meet hem eerst door met een multimeter in de diodestand (rood in VΩ):
+
+- **GND** is het contact waarbij je met rood erop naar beide andere contacten ongeveer 0,6–0,8 V
+  ziet (andersom OL);
+- tussen de andere twee geleidt hij alleen van **OUT** (rood) naar **VCC** (zwart).
+
+Bij het geteste oogje (Amazon B07KM1Q48Y) is dat: tip = VCC, ring = OUT, sleeve = GND. Zulke oogjes
+hebben vaak geen eigen pull-up op OUT; de firmware zet daarom de interne pull-up van GPIO1 aan.
+
 ## Flashen
 
 Elke build levert per bordje twee bestanden op:

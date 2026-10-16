@@ -2,6 +2,7 @@
 
 #include <IRrecv.h>
 #include <IRutils.h>
+#include <driver/gpio.h>
 
 #include "config.h"
 #include "log.h"
@@ -36,6 +37,9 @@ namespace ir {
 void begin() {
   receiver.setUnknownThreshold(12);
   receiver.enableIRIn();
+  // enableIRIn() makes the pin a plain input. Bare receivers have their own pull-up, but
+  // ready-made IR "eye" cables are often open collector and rely on the host for it.
+  gpio_pullup_en((gpio_num_t)IR_PIN);  // only the pull-up; leaves the decoder's interrupt alone
   logf("[ir] receiver on GPIO%d\n", IR_PIN);
 }
 
