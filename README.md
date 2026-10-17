@@ -75,7 +75,9 @@ so measure it first with a multimeter in diode mode (red in VΩ):
 - between the other two it only conducts from **OUT** (red) to **VCC** (black).
 
 For the tested eye (Amazon B07KM1Q48Y) that is: tip = VCC, ring = OUT, sleeve = GND. Such eyes often
-have no pull-up of their own on OUT, so the firmware enables GPIO1's internal pull-up.
+have no pull-up of their own on OUT, so the firmware enables GPIO1's internal pull-up. The red LED
+in such an eye is just a power indicator that is always on; you can desolder it (or its resistor)
+without affecting the receiver.
 
 ## Flashing
 

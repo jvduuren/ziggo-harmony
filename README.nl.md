@@ -77,7 +77,9 @@ verschilt per merk, dus meet hem eerst door met een multimeter in de diodestand 
 - tussen de andere twee geleidt hij alleen van **OUT** (rood) naar **VCC** (zwart).
 
 Bij het geteste oogje (Amazon B07KM1Q48Y) is dat: tip = VCC, ring = OUT, sleeve = GND. Zulke oogjes
-hebben vaak geen eigen pull-up op OUT; de firmware zet daarom de interne pull-up van GPIO1 aan.
+hebben vaak geen eigen pull-up op OUT; de firmware zet daarom de interne pull-up van GPIO1 aan. Het
+rode ledje in zo'n oogje is alleen een aan-lampje dat altijd brandt; je kunt het (of het weerstandje
+ervoor) eraf solderen zonder dat de ontvanger daar last van heeft.
 
 ## Flashen
 
