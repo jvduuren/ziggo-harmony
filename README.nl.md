@@ -25,6 +25,8 @@ Harmony-afstandsbediening ─▶ Harmony Hub ──IR──▶ ESP32 ──Bluet
                                                  originele afstandsbediening)
 ```
 
+<p align="center"><img src="docs/images/bridge-in-case.jpg" width="320" alt="De brug in het 3D-geprinte kastje: USB-C-voeding aan de ene kant, de kabel van het IR-oogje op de 3,5 mm-bus aan de andere kant, het blauwe ledje geeft aan dat hij met de box verbonden is"></p>
+
 - Volledig lokaal: geen cloud, geen Home Assistant, wifi is alleen nodig voor het instellen.
 - Directe reactie. Ingedrukt houden herhaalt, net als bij de originele afstandsbediening.
 - Alle knoppen van de box: navigatie, zenders, cijfers, afspelen, opnemen, gids en profiel.

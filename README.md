@@ -25,6 +25,8 @@ Harmony remote ─▶ Harmony Hub ──IR──▶ ESP32 ──Bluetooth LE─�
                                       original Ziggo remote)
 ```
 
+<p align="center"><img src="docs/images/bridge-in-case.jpg" width="320" alt="The bridge in its 3D-printed case: USB-C power on one end, the IR eye cable on the 3.5 mm jack on the other, the blue LED showing it is connected to the box"></p>
+
 - Fully local: no cloud, no Home Assistant, Wi-Fi only needed for setup.
 - Instant response. Holding a button repeats, just like the original remote.
 - All box buttons: navigation, channels, digits, playback, record, guide, profile.
